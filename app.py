@@ -1,66 +1,41 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import pickle
 from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
 
-# ---------------------------
-# Load Model
-# ---------------------------
-model = pickle.load(open("model.pkl", "rb"))
+with open("iris_model.pkl", "rb") as f:
+    model = pickle.load(f)
 
-# ---------------------------
-# Streamlit App Layout
-# ---------------------------
-st.title("🌸 Iris Flower Prediction App")
-st.write("""
-This is a simple **Machine Learning Web App** built with Streamlit.  
-It predicts the **species of Iris flower** based on input features.
-""")
+iris = load_iris()
 
-# Sidebar navigation
-st.sidebar.title("Navigation")
-options = st.sidebar.radio("Select a section:", ["Dataset Overview", "Make a Prediction", "Model Performance"])
+st.sidebar.title("Menu")
+page = st.sidebar.radio("Go to:", ["Home", "Data", "Predict"])
 
-# ---------------------------
-# Section 1: Dataset Overview
-# ---------------------------
-if options == "Dataset Overview":
-    st.subheader("About the Iris Dataset")
-    iris = load_iris()
-    df = pd.DataFrame(iris.data, columns=iris.feature_names)
-    df["species"] = iris.target
-    df["species"] = df["species"].map({0:"setosa", 1:"versicolor", 2:"virginica"})
+if page == "Home":
+    st.title("Iris Flower Classification")
+    st.write("Use this app to predict iris flower species!")
 
-    st.write("### Dataset Preview")
-    st.write(df.head())
+elif page == "Data":
+    st.title("Iris Dataset")
+    st.write("Dataset features:")
+    st.write(iris.feature_names)
+    st.write("Target names:")
+    st.write(iris.target_names)
 
-    st.write("### Shape:", df.shape)
-    st.write("### Columns:", df.columns.tolist())
-
-# ---------------------------
-# Section 2: Prediction
-# ---------------------------
-elif options == "Make a Prediction":
-    st.subheader("Enter Flower Measurements:")
-
-    sepal_length = st.slider("Sepal length (cm)", 4.0, 8.0, 5.0)
-    sepal_width  = st.slider("Sepal width (cm)", 2.0, 4.5, 3.0)
-    petal_length = st.slider("Petal length (cm)", 1.0, 7.0, 4.0)
-    petal_width  = st.slider("Petal width (cm)", 0.1, 2.5, 1.0)
-
-    input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
-    prediction = model.predict(input_data)
-    proba = model.predict_proba(input_data)
-
-    st.write("### Prediction:", prediction[0])
-    st.write("### Confidence:", np.max(proba))
-
-# ---------------------------
-# Section 3: Model Performance
-# ---------------------------
-elif options == "Model Performance":
-    st.subheader("Model Information")
-    st.write("The model used is **Random Forest Classifier** trained on the Iris dataset.")
-    st.write("It achieves over **95% accuracy** on the test set.")
+elif page == "Predict":
+    st.title("Species Predictor")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        sepal_length = st.number_input("Sepal Length (cm)", value=5.1)
+        sepal_width = st.number_input("Sepal Width (cm)", value=3.5)
+    
+    with col2:
+        petal_length = st.number_input("Petal Length (cm)", value=1.4)
+        petal_width = st.number_input("Petal Width (cm)", value=0.2)
+    
+    if st.button("Predict"):
+        prediction = model.predict([[sepal_length, sepal_width, petal_length, petal_width]])
+        species = iris.target_names[prediction][0]
+        st.write("**Predicted Species:**")
+        st.success(f"- Predicted Species: {species}")
